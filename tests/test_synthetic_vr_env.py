@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import numpy as np
 
 from examples.vr_edge.synthetic_env import SyntheticVREdgeEnv
@@ -18,3 +21,10 @@ def test_synthetic_environment_is_seeded_and_bounded() -> None:
     env_a.close()
     env_b.close()
 
+
+def test_public_fixture_has_documented_schema() -> None:
+    fixture_path = Path(__file__).parent / "fixtures" / "synthetic_trace.json"
+    payload = json.loads(fixture_path.read_text(encoding="utf-8"))
+    assert payload["schema"] == "synthetic-bandwidth-v1"
+    assert len(payload["bandwidth_mbps"]) == 2
+    assert all(len(row) == 8 for row in payload["bandwidth_mbps"])
