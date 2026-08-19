@@ -1,0 +1,10 @@
+environment:
+  num_users: 8
+  nontrivial_num_users: 64
+  episode_length: 256
+benchmark:
+  backends: [serial, sync, async]
+  env_counts: [1, 2, 4, 8]
+  warmup_steps: 128
+  measured_steps: 2048
+  repeats: 3
