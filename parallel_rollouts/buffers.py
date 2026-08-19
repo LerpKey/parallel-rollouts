@@ -57,6 +57,12 @@ class PreallocatedRolloutBuffer:
         self.final_observation_mask = np.zeros((horizon, num_envs), dtype=np.bool_)
         self.infos: list[list[dict[str, Any]]] | None = [] if store_infos else None
 
+    def reset(self) -> None:
+        """Reset write-side state while reusing all allocated arrays."""
+
+        if self.infos is not None:
+            self.infos.clear()
+
     def write(
         self,
         index: int,
@@ -107,4 +113,3 @@ class PreallocatedRolloutBuffer:
             final_observation_mask=self.final_observation_mask,
             infos=self.infos,
         )
-

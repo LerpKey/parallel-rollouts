@@ -38,3 +38,28 @@ def test_preallocated_buffer_writes_fixed_shapes() -> None:
     assert np.array_equal(batch.rewards[0], [1, 2, 3])
     assert np.array_equal(batch.values[0], [1, 2, 3])
 
+
+def test_buffer_reuses_info_storage_between_rollouts() -> None:
+    buffer = PreallocatedRolloutBuffer(
+        horizon=1,
+        num_envs=1,
+        observation_space=gym.spaces.Box(-1, 1, shape=(1,), dtype=np.float32),
+        action_space=gym.spaces.Discrete(2),
+        store_infos=True,
+    )
+    values = np.zeros((1, 1), dtype=np.float32)
+    buffer.write(
+        0,
+        values,
+        PolicyOutput(actions=np.zeros(1, dtype=np.int64)),
+        values[:, 0],
+        np.zeros(1, dtype=np.bool_),
+        np.zeros(1, dtype=np.bool_),
+        values,
+        values,
+        np.zeros(1, dtype=np.bool_),
+        [{}],
+    )
+    assert len(buffer.finalize().infos or []) == 1
+    buffer.reset()
+    assert len(buffer.finalize().infos or []) == 0

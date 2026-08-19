@@ -151,6 +151,7 @@ class ParallelRolloutCollector:
 
         if self._closed:
             raise RuntimeError("Cannot collect after close()")
+        self.buffer.reset()
         for index in range(self.buffer.horizon):
             output = _normalise_policy_output(self.policy(self._observations))
             (
