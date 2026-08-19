@@ -31,3 +31,18 @@ def test_different_seed_changes_rollout() -> None:
     observations_b, _ = _collect(43)
     assert not np.array_equal(observations_a, observations_b)
 
+
+def test_multiple_collections_advance_without_reallocating_info_list() -> None:
+    policy = lambda observations: np.ones((observations.shape[0], 2), dtype=np.int64)
+    with ParallelRolloutCollector(
+        [make_env(seed=10 + i, num_users=2) for i in range(2)],
+        policy,
+        backend="sync",
+        horizon=4,
+        seed=42,
+        store_infos=True,
+    ) as collector:
+        first = collector.collect()
+        second = collector.collect()
+    assert first.infos is second.infos
+    assert len(second.infos or []) == 4

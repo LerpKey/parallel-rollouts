@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ._factory import FlattenedFactory
-from .base import EnvFactory, _extract_vector_infos
+from .base import EnvFactory, SeedInput, _extract_vector_infos
 
 
 class AsyncBackend:
@@ -21,7 +21,7 @@ class AsyncBackend:
         self.observation_space = self.envs.single_observation_space
         self.action_space = self.envs.single_action_space
 
-    def reset(self, seed: int | None) -> npt.NDArray[np.float32]:
+    def reset(self, seed: SeedInput) -> npt.NDArray[np.float32]:
         observations, _ = self.envs.reset(seed=seed)
         return np.asarray(observations, dtype=np.float32)
 

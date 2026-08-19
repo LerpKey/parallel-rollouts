@@ -16,6 +16,7 @@ from ..types import PolicyOutput, RolloutBatch
 
 BackendName = Literal["serial", "sync", "async"]
 EnvFactory = Callable[[], gym.Env[Any, Any]]
+SeedInput = int | list[int | None] | None
 
 
 class BackendProtocol:
@@ -25,7 +26,7 @@ class BackendProtocol:
     action_space: gym.Space[Any]
     num_envs: int
 
-    def reset(self, seed: int | None) -> npt.NDArray[np.float32]:
+    def reset(self, seed: SeedInput) -> npt.NDArray[np.float32]:
         raise NotImplementedError
 
     def step(
@@ -131,7 +132,7 @@ class ParallelRolloutCollector:
             action_space=self._backend.action_space,
             store_infos=store_infos,
         )
-        self._observations = self._backend.reset(seed)
+        self._observations = self._backend.reset(self.seed_manager.all(len(env_fns)))
         self._closed = False
 
     @property

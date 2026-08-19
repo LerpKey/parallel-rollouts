@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ._factory import FlattenedFactory
-from .base import EnvFactory
+from .base import EnvFactory, SeedInput
 
 
 class SerialBackend:
@@ -23,10 +23,11 @@ class SerialBackend:
                 self.close()
                 raise ValueError("All environments must have matching spaces")
 
-    def reset(self, seed: int | None) -> npt.NDArray[np.float32]:
+    def reset(self, seed: SeedInput) -> npt.NDArray[np.float32]:
         observations = []
         for index, env in enumerate(self.envs):
-            observation, _ = env.reset(seed=None if seed is None else seed + index)
+            env_seed = seed[index] if isinstance(seed, list) else seed
+            observation, _ = env.reset(seed=env_seed)
             observations.append(observation)
         return np.asarray(observations, dtype=np.float32)
 
