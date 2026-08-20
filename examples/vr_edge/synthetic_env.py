@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
-from typing import Any, ClassVar
+from typing import Any, ClassVar, cast
 
 import gymnasium as gym
 import numpy as np
@@ -19,7 +19,6 @@ class SyntheticVREdgeEnv(gym.Env[npt.NDArray[np.float32], npt.NDArray[np.int64]]
     a bitrate, and the reward balances quality, stalls, and smoothness.
     """
 
-    metadata: ClassVar[dict[str, list[str]]] = {"render_modes": []}
     BITRATES: ClassVar[npt.NDArray[np.float32]] = np.asarray([2.0, 4.0, 8.0, 12.0], dtype=np.float32)
 
     def __init__(
@@ -29,18 +28,20 @@ class SyntheticVREdgeEnv(gym.Env[npt.NDArray[np.float32], npt.NDArray[np.int64]]
         seed: int | None = None,
     ) -> None:
         super().__init__()
+        self.metadata = {"render_modes": []}
         if num_users <= 0:
             raise ValueError("num_users must be positive")
         self.num_users = num_users
         self.episode_length = episode_length
-        self.observation_space = gym.spaces.Box(
+        self.observation_space: gym.spaces.Box = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
             shape=(num_users, 5),
             dtype=np.float32,
         )
-        self.action_space = gym.spaces.MultiDiscrete(
-            np.full(num_users, len(self.BITRATES), dtype=np.int64)
+        self.action_space = cast(
+            gym.Space[npt.NDArray[np.int64]],
+            gym.spaces.MultiDiscrete(np.full(num_users, len(self.BITRATES), dtype=np.int64)),
         )
         self._seed = seed
         self.current_step = 0

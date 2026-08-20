@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
-from typing import Any, Literal, Self
+from typing import Any, Literal, cast
 
 import gymnasium as gym
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import Self
 
 from ..buffers import PreallocatedRolloutBuffer
 from ..policies import PolicyProtocol
@@ -63,7 +64,7 @@ def _extract_vector_infos(
 
     final_observations = np.zeros((num_envs, *observation_shape), dtype=np.float32)
     final_mask = np.zeros(num_envs, dtype=np.bool_)
-    normalized = [{} for _ in range(num_envs)]
+    normalized: list[dict[str, Any]] = [{} for _ in range(num_envs)]
 
     if isinstance(infos, (list, tuple)):
         for index, info in enumerate(infos):
@@ -99,6 +100,14 @@ def _extract_vector_infos(
     return normalized, final_observations, final_mask
 
 
+def _observation_shape(space: gym.Space[Any]) -> tuple[int, ...]:
+    """Return a concrete observation shape for array allocation."""
+
+    if space.shape is None:
+        raise TypeError("Parallel rollouts require an observation space with a fixed shape")
+    return tuple(int(dimension) for dimension in space.shape)
+
+
 class ParallelRolloutCollector:
     """Collect fixed-horizon experience from serial or vectorized environments."""
 
@@ -120,11 +129,15 @@ class ParallelRolloutCollector:
         from .serial import SerialBackend
         from .sync import SyncBackend
 
-        backend_type = {"serial": SerialBackend, "sync": SyncBackend, "async": AsyncBackend}[backend]
+        backend_types: dict[str, Callable[[Sequence[EnvFactory]], BackendProtocol]] = {
+            "serial": lambda factories: cast(BackendProtocol, SerialBackend(factories)),
+            "sync": lambda factories: cast(BackendProtocol, SyncBackend(factories)),
+            "async": lambda factories: cast(BackendProtocol, AsyncBackend(factories)),
+        }
         self.backend_name = backend
         self.policy = policy
         self.seed_manager = SeedManager(seed)
-        self._backend: BackendProtocol = backend_type(env_fns)
+        self._backend = backend_types[backend](env_fns)
         self.buffer = PreallocatedRolloutBuffer(
             horizon=horizon,
             num_envs=len(env_fns),
