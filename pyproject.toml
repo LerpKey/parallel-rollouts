@@ -23,6 +23,7 @@ classifiers = [
 dependencies = [
     "numpy>=1.24,<3.0",
     "gymnasium>=0.29,<2.0",
+    "typing-extensions>=4.3",
 ]
 
 [project.optional-dependencies]
