@@ -33,7 +33,7 @@ class ActorCriticPolicy(nn.Module):
         values = self.value_head(features).squeeze(-1)
         return logits, values
 
-    def __call__(self, observations: npt.NDArray[np.float32]) -> PolicyOutput:  # type: ignore[override]
+    def __call__(self, observations: npt.NDArray[np.float32]) -> PolicyOutput:
         tensor = torch.as_tensor(observations, dtype=torch.float32)
         with torch.no_grad():
             logits, values = self._forward(tensor)

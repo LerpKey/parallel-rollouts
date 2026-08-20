@@ -10,7 +10,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ._factory import FlattenedFactory
-from .base import EnvFactory, SeedInput, _extract_vector_infos
+from .base import EnvFactory, SeedInput, _extract_vector_infos, _observation_shape
 
 
 class SyncBackend:
@@ -22,6 +22,7 @@ class SyncBackend:
         self.action_space = self.envs.single_action_space
 
     def reset(self, seed: SeedInput) -> npt.NDArray[np.float32]:
+        observations: Any
         observations, _ = self.envs.reset(seed=seed)
         return np.asarray(observations, dtype=np.float32)
 
@@ -36,9 +37,14 @@ class SyncBackend:
         npt.NDArray[np.float32],
         npt.NDArray[np.bool_],
     ]:
+        observations: Any
+        rewards: Any
+        terminated: Any
+        truncated: Any
+        infos: Any
         observations, rewards, terminated, truncated, infos = self.envs.step(actions)
         normalized, final_obs, final_mask = _extract_vector_infos(
-            infos, self.num_envs, self.observation_space.shape
+            infos, self.num_envs, _observation_shape(self.observation_space)
         )
         return (
             np.asarray(observations, dtype=np.float32),

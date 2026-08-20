@@ -35,15 +35,23 @@ def measure(
     repeats: int,
 ) -> dict:
     timings = []
+    horizon = 256
+    if warmup < 0:
+        raise ValueError("warmup must be non-negative")
+    if steps <= 0 or steps % horizon != 0:
+        raise ValueError(f"steps must be a positive multiple of horizon ({horizon})")
+    warmup_steps_actual = ((warmup + horizon - 1) // horizon) * horizon
     for repeat in range(repeats):
         env_fns = [
             partial(SyntheticVREdgeEnv, num_users=num_users, episode_length=256, seed=1000 + i)
             for i in range(num_envs)
         ]
         policy = ConstantPolicy(num_users=num_users)
-        horizon = 256
         with ParallelRolloutCollector(env_fns, policy, backend=backend, horizon=horizon, seed=42) as collector:
-            collector.collect()
+            remaining_warmup = warmup_steps_actual
+            while remaining_warmup > 0:
+                collector.collect()
+                remaining_warmup -= horizon
             start = time.perf_counter()
             remaining = steps
             while remaining > 0:
@@ -56,6 +64,9 @@ def measure(
         "backend": backend,
         "num_envs": num_envs,
         "num_users": num_users,
+        "horizon": horizon,
+        "warmup_steps_requested": warmup,
+        "warmup_steps_actual": warmup_steps_actual,
         "steps_per_env": steps,
         "transitions_per_second": transitions / elapsed,
         "elapsed_seconds_median": elapsed,

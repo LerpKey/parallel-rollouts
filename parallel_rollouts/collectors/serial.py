@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ._factory import FlattenedFactory
-from .base import EnvFactory, SeedInput
+from .base import EnvFactory, SeedInput, _observation_shape
 
 
 class SerialBackend:
@@ -47,7 +47,9 @@ class SerialBackend:
         terminated = np.empty(self.num_envs, dtype=np.bool_)
         truncated = np.empty(self.num_envs, dtype=np.bool_)
         infos: list[dict[str, Any]] = []
-        final_observations = np.zeros((self.num_envs, *self.observation_space.shape), dtype=np.float32)
+        final_observations = np.zeros(
+            (self.num_envs, *_observation_shape(self.observation_space)), dtype=np.float32
+        )
         final_mask = np.zeros(self.num_envs, dtype=np.bool_)
 
         for index, env in enumerate(self.envs):

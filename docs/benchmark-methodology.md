@@ -30,3 +30,11 @@ The benchmark intentionally does not impose a universal speed threshold.
 Process startup and IPC can dominate small workloads. A release report must
 show raw measurements and speedup relative to the matching serial baseline,
 and may use “faster” only for measured configurations that support it.
+
+The timed interval starts after collector construction and the requested
+warmup. It covers repeated `collector.collect()` calls only; environment
+construction, worker startup, and policy training are not included. The
+reported `warmup_steps_actual` is rounded up to a complete collection horizon.
+This benchmark uses the repository's synthetic environment. It is not a
+performance claim about a separate application environment such as DRL's
+frame-buffer simulator.
