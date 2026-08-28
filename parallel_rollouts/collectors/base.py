@@ -55,6 +55,11 @@ def _normalise_policy_output(
     return PolicyOutput(actions=np.asarray(output))
 
 
+def _info_field_is_present(infos: dict[str, Any], key: str, index: int) -> bool:
+    mask = infos.get(f"_{key}")
+    return mask is None or bool(np.asarray(mask)[index])
+
+
 def _extract_vector_infos(
     infos: Any,
     num_envs: int,
@@ -92,7 +97,7 @@ def _extract_vector_infos(
         normalized[index] = {
             key: value[index] if isinstance(value, np.ndarray) and value.shape[:1] == (num_envs,) else value
             for key, value in infos.items()
-            if not key.startswith("_")
+            if not key.startswith("_") and _info_field_is_present(infos, key, index)
         }
         if final_values is not None and explicit_mask[index]:
             final_observations[index] = np.asarray(final_values[index], dtype=np.float32)

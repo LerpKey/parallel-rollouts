@@ -6,6 +6,7 @@ import pytest
 
 from examples.vr_edge.synthetic_env import make_env
 from parallel_rollouts import ParallelRolloutCollector
+from parallel_rollouts.collectors.base import _extract_vector_infos
 
 
 class DictObservationEnv(gym.Env):
@@ -73,3 +74,16 @@ def test_dict_observation_is_flattened_at_collector_boundary() -> None:
         batch = collector.collect()
     assert isinstance(collector.observation_space, gym.spaces.Box)
     assert batch.observations.shape == (2, 2, 5)
+
+
+def test_vector_info_masks_exclude_other_environments_placeholders() -> None:
+    infos = {
+        "left_only": np.array([4, 0]),
+        "_left_only": np.array([True, False]),
+        "right_only": np.array([0, 4]),
+        "_right_only": np.array([False, True]),
+    }
+
+    normalized, _, _ = _extract_vector_infos(infos, num_envs=2, observation_shape=(1,))
+
+    assert normalized == [{"left_only": 4}, {"right_only": 4}]
